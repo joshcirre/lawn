@@ -55,15 +55,22 @@ see [Deployment](docs/deployment.md). For local development, see
 
 ## Why lawn exists
 
-Theo originally built lawn as a simpler, faster alternative to Frame.io. This
-fork keeps the video review workflow while letting a team run the application
-and its data on its own Laravel Cloud resources.
+Lawn gives creative teams one place to review video versions, discuss exact
+moments, and share feedback with clients. This fork lets a team run that
+workflow on its own Laravel Cloud resources, with its own database and storage.
+Sign-in is handled by the Lawn auth API, and there are no subscription plans or
+per-seat limits in the app. The operator pays for Cloud resources and Mux usage.
 
 ## Docs
 
-- [Setup](docs/setup.md)
-- [Deployment](docs/deployment.md)
-- [Auth API](auth-api/README.md)
-- [Self-hosted Convex backend](convex-backend/README.md)
-- [Self-hosted Convex dashboard](convex-dashboard/README.md)
-- [Philosophy](docs/philosophy.md)
+- [Local setup](docs/setup.md) — install dependencies, run Lawn locally, and
+  configure development environment variables.
+- [Laravel Cloud deployment](docs/deployment.md) — deploy the four applications,
+  connect MySQL and storage, and set production Convex variables.
+- [Auth API](auth-api/README.md) — passkey and password sign-in, JWTs, and API
+  endpoints.
+- [Convex backend](convex-backend/README.md) — build and run the self-hosted
+  backend on Cloud, including database and networking notes.
+- [Convex dashboard](convex-dashboard/README.md) — host the admin UI and connect
+  it to the production backend.
+- [Design philosophy](docs/philosophy.md) — visual style and component guidance.
