@@ -1,21 +1,55 @@
 # lawn
 
-Video review platform for creative teams. Built by Theo.
+Lawn is a self-hosted video review platform for creative teams. Upload videos,
+review versions, leave timestamped comments, and share work with a team or a
+client. Originally built by Theo.
 
-## IMPORTANT NOTICE
+## What changed in this fork
 
-I am, effectively, not accepting PRs at this time. This may change in the future. My preferred "PR" method is to describe problems in the issues tab and give me detailed prompts I can quickly copy/paste into my agent of choice.
+- Replaced Clerk with a small Laravel auth API. People can sign in with a
+  passkey or email and password. The API issues JWTs that Convex verifies.
+- Removed subscriptions, storage quotas, and the billing flow. Accounts can
+  create teams and upload without choosing a plan; the operator pays the
+  infrastructure and video service costs.
+- Replaced the hosted product's marketing and pricing pages with a simple
+  homepage for the self-hosted app. The video review features remain: projects,
+  version stacks, comments, and share links.
+- Added Laravel Cloud deployments for the web app, self-hosted Convex, auth API,
+  and Convex dashboard.
 
-## ...why did you build this?
+## Hosting on Laravel Cloud
 
-I got tired of Frame.io slowly regressing. I wanted something simple, fast and reliable.
+Four Cloud applications deploy from this repository:
 
-I don't know how much time I'll have to maintain this long term, so I decided to open source it. I have no idea where this project is going long term.
+| Application      | Root directory      | Purpose                                                                                                       |
+| ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `lawn-frontend`  | `/`                 | Builds and serves the TanStack Start frontend as a single-page app; pushes Convex functions during its build. |
+| `lawn`           | `convex-backend/`   | Runs the self-hosted Convex backend and HTTP actions, backed by Cloud Postgres and a private Cloud bucket.    |
+| `lawn-api`       | `auth-api/`         | Laravel API for passkeys, email and password sign-in, and JWT issuance.                                       |
+| `lawn-dashboard` | `convex-dashboard/` | Serves the self-hosted Convex admin dashboard and connects to the existing backend.                           |
 
-My team is using lawn every day already. We intend to continue, and we intend to keep adding things we need throughout.
+Video uploads use a separate private Cloud bucket through the `RAILWAY_*` Convex
+environment variables. Mux encodes and serves video; Convex creates Mux assets
+and playback IDs and receives Mux webhooks. The Mux token, signing key, and
+webhook secret are set in the **production Convex deployment** as `MUX_*`
+environment variables. Current playback IDs are public; the configured signing
+key is not yet used to restrict playback. Keep credentials in ignored local
+files or the deployment's secret store; do not commit them.
+
+For the exact Cloud resources, environment variables, and deployment order,
+see [Deployment](docs/deployment.md). For local development, see
+[Setup](docs/setup.md).
+
+## Why lawn exists
+
+Theo originally built lawn as a simpler, faster alternative to Frame.io. This
+fork keeps the video review workflow while letting a team run the application
+and its data on its own Laravel Cloud resources.
 
 ## Docs
 
 - [Setup](docs/setup.md)
 - [Deployment](docs/deployment.md)
+- [Auth API](auth-api/README.md)
+- [Self-hosted Convex backend](convex-backend/README.md)
 - [Philosophy](docs/philosophy.md)
