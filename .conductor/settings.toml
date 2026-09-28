@@ -3,7 +3,7 @@
 [scripts]
 # Install JS deps with bun (repo pins bun@1.3.6 and commits bun.lock), then
 # provision THIS worktree's own anonymous local Convex deployment: configure it,
-# seed its env vars from .env.local (+ derive CLERK_JWT_ISSUER_DOMAIN), and push.
+# seed its env vars from .env.local (+ require AUTH_ISSUER_URL), and push.
 # Data lives in ./.convex (git-ignored) so every workspace is isolated.
 # convex/_generated is committed, so no codegen step is needed for typecheck.
 # (First-ever run downloads the ~150MB local backend binary; it is then cached

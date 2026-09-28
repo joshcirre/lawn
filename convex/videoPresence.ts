@@ -88,7 +88,7 @@ export const heartbeat = mutation({
     };
 
     if (identity) {
-      userId = `clerk:${identity.subject}`;
+      userId = `user:${identity.subject}`;
       data = {
         kind: "member",
         displayName: identityName(identity),

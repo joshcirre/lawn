@@ -37,8 +37,8 @@ to this git worktree (anonymous mode, data in `./.convex`, no login, offline).
 This lets multiple Conductor workspaces run in parallel without sharing one
 cloud dev backend. The script (`scripts/dev.sh`) provisions the deployment on
 first run via `scripts/convex-local-setup.sh`, which configures it and seeds its
-env vars from `.env.local` (plus `CLERK_JWT_ISSUER_DOMAIN`, derived from the
-Clerk publishable key).
+env vars from `.env.local` (including `AUTH_ISSUER_URL`, the URL of the
+Laravel auth API in `auth-api/`).
 
 - `bun run dev` — Vite + local Convex (the default).
 - `bun run dev:cloud` — Vite + the shared cloud dev deployment (old behavior).
@@ -53,7 +53,7 @@ values to `.env.convex.local` (git-ignored, auto-seeded):
 - `MUX_*` — Mux encoding / playback
 
 They are read at runtime, so the function push still succeeds without them.
-External webhooks (Stripe, Chunkify, Clerk) can't reach a `127.0.0.1` backend
+External webhooks (Stripe, Chunkify, Mux) can't reach a `127.0.0.1` backend
 without a tunnel, so use `dev:cloud` (or a tunnel) when testing webhook flows.
 
 <!-- convex-ai-start -->

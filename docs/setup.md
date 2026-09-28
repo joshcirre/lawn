@@ -37,7 +37,7 @@ bun run lint
 ## Environment variables
 
 Copy `.env.example` to `.env.local` and fill it in — it lists every variable,
-grouped by section (convex, clerk, stripe, mux, storage, autumn, chunkify).
+grouped by section (convex, auth, stripe, mux, storage, autumn, chunkify).
 
 - Root `.env.example` — local dev env (client `VITE_*` vars + secrets that
   `bun run dev` seeds into the local Convex deployment).

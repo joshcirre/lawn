@@ -8,6 +8,7 @@ export default tseslint.config(js.configs.recommended, ...tseslint.configs.recom
     "build/**",
     "dist/**",
     "app/routeTree.gen.ts",
+    "auth-api/**",
     "convex/_generated/**",
     "coverage/**",
   ],

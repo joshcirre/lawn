@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ClerkConvexProvider } from "@/lib/convex";
+import { AuthConvexProvider } from "@/lib/convex";
 import { convexConnectionLinks, muxMediaLinks, seoHead } from "@/lib/seo";
 import SharePage from "./-share";
 
@@ -22,8 +22,8 @@ export const Route = createFileRoute("/share/$token")({
 
 function ShareRoute() {
   return (
-    <ClerkConvexProvider>
+    <AuthConvexProvider>
       <SharePage />
-    </ClerkConvexProvider>
+    </AuthConvexProvider>
   );
 }

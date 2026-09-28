@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ThemeProvider } from "@/components/theme/ThemeToggle";
-import { ClerkConvexProvider } from "@/lib/convex";
+import { AuthConvexProvider } from "@/lib/convex";
 import { convexConnectionLinks, seoHead } from "@/lib/seo";
 import DashboardLayout from "./-layout";
 
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardRoute() {
   return (
-    <ClerkConvexProvider>
+    <AuthConvexProvider>
       <ThemeProvider>
         <DashboardLayout />
       </ThemeProvider>
-    </ClerkConvexProvider>
+    </AuthConvexProvider>
   );
 }

@@ -2,7 +2,7 @@ import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { useUser } from "@clerk/tanstack-react-start";
+import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +14,7 @@ export default function InvitePage() {
   const params = useParams({ strict: false });
   const navigate = useNavigate({});
   const token = params.token as string;
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth();
 
   const { invite } = useInviteData({ token });
   const acceptInvite = useMutation(api.teams.acceptInvite);
@@ -108,7 +108,7 @@ export default function InvitePage() {
   }
 
   // User signed in but with different email
-  if (user.primaryEmailAddress?.emailAddress !== invite.email) {
+  if (user.email !== invite.email) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f0f0e8] p-4">
         <Card className="w-full max-w-md">
@@ -118,8 +118,7 @@ export default function InvitePage() {
             </div>
             <CardTitle>Different email address</CardTitle>
             <CardDescription>
-              This invite was sent to {invite.email}, but you&apos;re signed in as{" "}
-              {user.primaryEmailAddress?.emailAddress}.
+              This invite was sent to {invite.email}, but you&apos;re signed in as {user.email}.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

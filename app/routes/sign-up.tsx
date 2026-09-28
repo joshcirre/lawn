@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ClerkClientProvider } from "@/lib/clerk";
+import { AuthProvider } from "@/lib/auth";
 import { seoHead } from "@/lib/seo";
 import { AuthShell } from "./auth/-layout";
 import SignUpPage from "./auth/-sign-up";
@@ -20,10 +20,10 @@ export const Route = createFileRoute("/sign-up")({
 
 function SignUpRoute() {
   return (
-    <ClerkClientProvider>
+    <AuthProvider>
       <AuthShell>
         <SignUpPage />
       </AuthShell>
-    </ClerkClientProvider>
+    </AuthProvider>
   );
 }

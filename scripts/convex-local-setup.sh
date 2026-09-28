@@ -12,9 +12,8 @@
 #      CONVEX_DEPLOYMENT=dev:... value that .env.local was copied in with.
 #   2. Seeds the deployment's environment variables (a fresh local backend
 #      starts with NONE), which is required for `convex dev` to push functions:
-#        - Stripe / Clerk / Chunkify / Autumn secrets found in .env.local
-#        - CLERK_JWT_ISSUER_DOMAIN, derived from VITE_CLERK_PUBLISHABLE_KEY
-#          (push-blocking, and not stored in .env.local)
+#        - Stripe / auth / Chunkify / Autumn secrets found in .env.local
+#        - AUTH_ISSUER_URL, the Laravel auth API's URL (push-blocking)
 #
 # Secrets that live ONLY in the Convex cloud dashboard (not in .env.local) are
 # read at runtime, so the push still succeeds without them. To use the matching
@@ -64,25 +63,10 @@ echo "convex-local-setup: seeding deployment environment variables..."
 seed="$(mktemp)"
 trap 'rm -f "$seed"' EXIT
 # Backend runtime secrets only; drop client (VITE_) and selection (CONVEX_) vars.
-grep -hE '^(STRIPE_|CLERK_|CHUNKIFY_|AUTUMN_|RAILWAY_|MUX_)' .env.local .env.convex.local 2>/dev/null \
+grep -hE '^(STRIPE_|AUTH_ISSUER_URL|CHUNKIFY_|AUTUMN_|RAILWAY_|MUX_)' .env.local .env.convex.local 2>/dev/null \
   | grep -vE '^VITE_' > "$seed" || true
-# Derive CLERK_JWT_ISSUER_DOMAIN from the Clerk publishable key when not provided.
-# A Clerk pk_(test|live)_ key base64-encodes "<frontend-api-host>$"; the JWT
-# issuer is https://<that host>.
-issuer_domain=$(grep -E '^CLERK_JWT_ISSUER_DOMAIN=' "$seed" | tail -1 | cut -d= -f2- | tr -d "\"'[:space:]")
-if [ -z "${issuer_domain:-}" ]; then
-  pk=$(grep -hE '^VITE_CLERK_PUBLISHABLE_KEY=' .env.local 2>/dev/null | head -1 | cut -d= -f2- | tr -d "\"'")
-  if [ -n "${pk:-}" ]; then
-    host=$(printf '%s' "$pk" | sed -E 's/^pk_(test|live)_//' | { base64 -d 2>/dev/null || base64 -D 2>/dev/null; } | tr -d '$')
-    if [ -n "$host" ]; then
-      issuer_domain="https://$host"
-      echo "CLERK_JWT_ISSUER_DOMAIN=$issuer_domain" >> "$seed"
-    fi
-  fi
-fi
-
-if [ -z "${issuer_domain:-}" ]; then
-  echo "convex-local-setup: ERROR - missing CLERK_JWT_ISSUER_DOMAIN. Set it explicitly or provide a valid VITE_CLERK_PUBLISHABLE_KEY in .env.local." >&2
+if ! grep -qE '^AUTH_ISSUER_URL=.+' "$seed"; then
+  echo "convex-local-setup: ERROR - missing AUTH_ISSUER_URL in .env.local (the Laravel auth API URL, e.g. http://localhost:8000)." >&2
   exit 1
 fi
 

@@ -2,7 +2,7 @@ Run `bun run test:player` after `bunx playwright install chromium`.
 The suite starts a separate Vite harness and drives the production VideoPlayer and
 VideoEditorLayout through Chromium at localhost. It checks shortcuts, real reverse
 seeking, shared-player behavior, and media identity/state across layout changes.
-It requires no Clerk or Convex credentials and does not exercise the authenticated
+It requires no auth or Convex credentials and does not exercise the authenticated
 route or Mux/HLS recovery. The harness is not a production app route.
 
 The generated fixture is a 20-second, 30 fps H.264 test pattern with no audio:

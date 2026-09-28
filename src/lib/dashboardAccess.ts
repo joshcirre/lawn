@@ -1,8 +1,8 @@
 type WorkspaceContext = object | null | undefined;
 
 type DashboardAccessInput = {
-  clerkLoaded: boolean;
-  hasClerkUser: boolean;
+  authLoaded: boolean;
+  hasAuthUser: boolean;
   convexAuthLoading: boolean;
   convexAuthenticated: boolean;
   contextRequired: boolean;
@@ -20,11 +20,11 @@ export type DashboardAccessState =
   | { kind: "auth-unavailable" };
 
 export function resolveDashboardAccess(input: DashboardAccessInput): DashboardAccessState {
-  if (!input.clerkLoaded) {
+  if (!input.authLoaded) {
     return { kind: "loading" };
   }
 
-  if (!input.hasClerkUser) {
+  if (!input.hasAuthUser) {
     if (input.publicLookupRequired && input.publicId === undefined) {
       return { kind: "loading" };
     }

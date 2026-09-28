@@ -20,14 +20,16 @@ Required Vercel environment variable:
 
 ## Deploying to Laravel Cloud (with self-hosted Convex)
 
-Two Cloud applications from this one repository (Cloud's monorepo support):
+Three Cloud applications from this one repository (Cloud's monorepo support):
 
 | App           | Root directory    | Runtime            | Build command         | Start command         |
 | ------------- | ----------------- | ------------------ | --------------------- | --------------------- |
 | `lawn-convex` | `convex-backend/` | Node 22 (lockfile) | `bash build.sh`       | `bash start.sh`       |
 | `lawn-web`    | repo root         | Bun (`bun.lock`)   | `bun run build:cloud` | `bun run start:cloud` |
+| `lawn-auth`   | `auth-api/`       | PHP 8.5            | (Cloud default)       | (Cloud default)       |
 
-Deploy `lawn-convex` first; `lawn-web`'s build pushes the Convex functions to it.
+Deploy `lawn-convex` and `lawn-auth` first; `lawn-web`'s build pushes the Convex
+functions to `lawn-convex`, whose auth config points at `lawn-auth`.
 
 ### `lawn-convex`: the Convex backend
 
@@ -65,23 +67,29 @@ mode when these are set, and injects `VITE_CONVEX_URL` from the backend:
 
 - `CONVEX_SELF_HOSTED_URL`: `lawn-convex`'s public URL (do not also set `CONVEX_DEPLOY_KEY`)
 - `CONVEX_SELF_HOSTED_ADMIN_KEY`
-- `VITE_CLERK_PUBLISHABLE_KEY`
+- `VITE_AUTH_URL`: `lawn-auth`'s public URL
 
 `start:cloud` serves `dist/client` with the same fallback routing as `vercel.json`.
+
+### `lawn-auth`: sign-in (passkeys + passwords)
+
+A small Laravel app in `auth-api/` replaces Clerk. It signs RS256 JWTs that
+Convex verifies against its `/.well-known/jwks.json`. Setup, env vars and the
+API are in [`auth-api/README.md`](../auth-api/README.md).
 
 ### Convex deployment env
 
 Backend secrets live in the Convex deployment, not in Cloud. Set them once
-before the first `lawn-web` deploy (the push fails without the Stripe and Clerk
-values):
+before the first `lawn-web` deploy (the push fails without the Stripe values and
+`AUTH_ISSUER_URL`):
 
 ```bash
 export CONVEX_SELF_HOSTED_URL=https://convex.example.com CONVEX_SELF_HOSTED_ADMIN_KEY='lawn|...'
 bunx convex env set --from-file .env.convex.production
 ```
 
-Use the same keys as `.env.example` (`STRIPE_*`, `CLERK_SECRET_KEY`,
-`CLERK_JWT_ISSUER_DOMAIN`, `MUX_*`, `RAILWAY_*`, `AUTUMN_SECRET_KEY`,
+Use the same keys as `.env.example` (`STRIPE_*`, `AUTH_ISSUER_URL`
+(`lawn-auth`'s public URL), `MUX_*`, `RAILWAY_*`, `AUTUMN_SECRET_KEY`,
 `CHUNKIFY_*`). `RAILWAY_*` is lawn's own S3 client for video uploads and can
 point at a second, public Cloud bucket. Stripe and Mux webhooks go to
 `https://convex.example.com/http/...`.

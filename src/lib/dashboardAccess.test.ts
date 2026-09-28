@@ -4,8 +4,8 @@ import test from "node:test";
 import { resolveDashboardAccess } from "./dashboardAccess";
 
 const authenticated = {
-  clerkLoaded: true,
-  hasClerkUser: true,
+  authLoaded: true,
+  hasAuthUser: true,
   convexAuthLoading: false,
   convexAuthenticated: true,
   contextRequired: true,
@@ -35,7 +35,7 @@ test("waits for Convex authentication before allowing protected dashboard conten
   );
 });
 
-test("uses public playback when Clerk has a user but Convex auth settles unauthenticated", () => {
+test("uses public playback when the auth server has a user but Convex auth settles unauthenticated", () => {
   assert.deepEqual(
     resolveDashboardAccess({
       ...authenticated,
@@ -63,7 +63,7 @@ test("redirects anonymous viewers and authenticated non-members to public playba
   assert.deepEqual(
     resolveDashboardAccess({
       ...authenticated,
-      hasClerkUser: false,
+      hasAuthUser: false,
       convexAuthenticated: false,
       workspaceContext: undefined,
     }),
@@ -86,7 +86,7 @@ test("sends anonymous private links to sign in without mounting dashboard conten
   assert.deepEqual(
     resolveDashboardAccess({
       ...authenticated,
-      hasClerkUser: false,
+      hasAuthUser: false,
       convexAuthenticated: false,
       workspaceContext: undefined,
       publicId: null,

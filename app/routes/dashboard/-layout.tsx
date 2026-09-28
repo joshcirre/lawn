@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/tanstack-react-start";
+import { useAuth } from "@/lib/auth";
 import { useConvex, useConvexAuth, useQuery } from "convex/react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { api } from "@convex/_generated/api";
@@ -360,7 +360,8 @@ function DashboardUploadBoundary({
 }
 
 export default function DashboardLayout() {
-  const { isLoaded, userId } = useAuth();
+  const { isLoaded, user } = useAuth();
+  const userId = user?.id;
   const { isLoading: isConvexAuthLoading, isAuthenticated: isConvexAuthenticated } =
     useConvexAuth();
   const location = useLocation();
@@ -381,8 +382,8 @@ export default function DashboardLayout() {
       : "skip",
   );
   const access = resolveDashboardAccess({
-    clerkLoaded: isLoaded,
-    hasClerkUser: Boolean(userId),
+    authLoaded: isLoaded,
+    hasAuthUser: Boolean(userId),
     convexAuthLoading: isConvexAuthLoading,
     convexAuthenticated: isConvexAuthenticated,
     contextRequired,

@@ -13,3 +13,6 @@ public
 
 bun.lock
 skills-lock.json
+
+# Laravel auth API (formatted with Pint)
+auth-api
