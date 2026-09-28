@@ -33,8 +33,11 @@ origin="${origin%/}"
 site="${CONVEX_SITE_ORIGIN:-$origin/http}"
 
 port="${PORT:-3000}"
+# convex-local-backend can only bind IPv4, but Cloud reaches the app over IPv6,
+# so the backend listens on loopback and proxy.mjs serves [::]:$PORT in front.
+backend_port="${CONVEX_BACKEND_PORT:-$((port + 10))}"
 # Internal only; Cloud's proxy never routes to it.
-site_port="${CONVEX_SITE_PROXY_PORT:-$((port + 1))}"
+site_port="${CONVEX_SITE_PROXY_PORT:-$((backend_port + 1))}"
 
 data_dir="${DATA_DIR:-/tmp/convex}"
 export TMPDIR="${TMPDIR_OVERRIDE:-$data_dir/tmp}"
@@ -116,12 +119,13 @@ case "$node_version" in
   *) echo "start: WARNING \"use node\" actions need node v20/v22/v24 on PATH (found '${node_version:-none}')." >&2 ;;
 esac
 
-echo "start: origin=$origin site=$site port=$port db=${db_flags[1]:-sqlite} db_host=${server:+${server##*@}} storage=${storage_flags[0]}"
+echo "start: origin=$origin site=$site port=$port backend_port=$backend_port db=${db_flags[1]:-sqlite} db_host=${server:+${server##*@}} storage=${storage_flags[0]}"
 
-exec bin/convex-local-backend \
+bin/convex-local-backend \
   --instance-name "$INSTANCE_NAME" \
   --instance-secret "$INSTANCE_SECRET" \
-  --port "$port" \
+  --interface 127.0.0.1 \
+  --port "$backend_port" \
   --site-proxy-port "$site_port" \
   --convex-origin "$origin" \
   --convex-site "$site" \
@@ -130,4 +134,24 @@ exec bin/convex-local-backend \
   ${DO_NOT_REQUIRE_SSL:+--do-not-require-ssl} \
   ${db_flags[@]+"${db_flags[@]}"} \
   "${storage_flags[@]}" \
-  "$db_spec"
+  "$db_spec" &
+backend_pid=$!
+
+LISTEN_PORT="$port" TARGET_PORT="$backend_port" node proxy.mjs &
+proxy_pid=$!
+
+# Stop both on SIGTERM (deploys/restarts), and exit as soon as either one dies
+# so Cloud restarts the pair instead of leaving a half-working container.
+stop() {
+  kill "$backend_pid" "$proxy_pid" 2>/dev/null || true
+  wait "$backend_pid" "$proxy_pid" 2>/dev/null || true
+}
+trap 'stop; exit 143' TERM INT
+while kill -0 "$backend_pid" 2>/dev/null && kill -0 "$proxy_pid" 2>/dev/null; do
+  sleep 1
+done
+status=0
+kill -0 "$backend_pid" 2>/dev/null || { wait "$backend_pid" || status=$?; echo "start: convex-local-backend exited ($status)" >&2; }
+kill -0 "$proxy_pid" 2>/dev/null || { wait "$proxy_pid" || status=$?; echo "start: proxy exited ($status)" >&2; }
+stop
+exit "${status:-1}"
