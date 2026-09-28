@@ -44,6 +44,17 @@ mkdir -p "$TMPDIR" "$data_dir/storage"
 # Convex wants a server URL WITHOUT the database name or query params; it picks
 # the database from INSTANCE_NAME. Cloud injects DATABASE_URL with both.
 expected_db="${INSTANCE_NAME//-/_}"
+# Cloud may inject Laravel-style DB_* vars instead of a URL; build one from them.
+if [ -z "${DATABASE_URL:-}" ] && [ -n "${DB_HOST:-}" ]; then
+  case "${DB_CONNECTION:-pgsql}" in
+    pgsql | postgres | postgresql) db_scheme=postgres ;;
+    mysql | mariadb) db_scheme=mysql ;;
+    *) fail "unsupported DB_CONNECTION '${DB_CONNECTION}'" ;;
+  esac
+  db_user="$(node -p 'encodeURIComponent(process.env.DB_USERNAME ?? "")')"
+  db_pass="$(node -p 'encodeURIComponent(process.env.DB_PASSWORD ?? "")')"
+  DATABASE_URL="$db_scheme://$db_user:$db_pass@$DB_HOST${DB_PORT:+:$DB_PORT}/${DB_DATABASE:-}"
+fi
 db_flags=()
 db_spec="$data_dir/db.sqlite3"
 if [ -n "${POSTGRES_URL:-}" ]; then
@@ -81,9 +92,10 @@ if [ -n "${AWS_BUCKET:-}${S3_STORAGE_MODULES_BUCKET:-}" ]; then
   export S3_STORAGE_MODULES_BUCKET="${S3_STORAGE_MODULES_BUCKET:-$default_bucket}"
   export S3_STORAGE_FILES_BUCKET="${S3_STORAGE_FILES_BUCKET:-$default_bucket}"
   export S3_STORAGE_SEARCH_BUCKET="${S3_STORAGE_SEARCH_BUCKET:-$default_bucket}"
-  export AWS_REGION="${AWS_REGION:-auto}"
-  if [ -z "${S3_ENDPOINT_URL:-}" ] && [ -n "${AWS_ENDPOINT_URL:-}" ]; then
-    export S3_ENDPOINT_URL="$AWS_ENDPOINT_URL"
+  export AWS_REGION="${AWS_REGION:-${AWS_DEFAULT_REGION:-auto}}"
+  if [ -z "${S3_ENDPOINT_URL:-}" ]; then
+    endpoint="${AWS_ENDPOINT_URL:-${AWS_ENDPOINT:-}}"
+    [ -n "$endpoint" ] && export S3_ENDPOINT_URL="$endpoint"
   fi
   if [ -n "${S3_ENDPOINT_URL:-}" ]; then
     export AWS_S3_FORCE_PATH_STYLE="${AWS_S3_FORCE_PATH_STYLE:-true}"
