@@ -7,6 +7,6 @@
   },
   "scripts": {
     "build": "node build.mjs",
-    "start": "HOSTNAME=0.0.0.0 node dist/app/dashboard-self-hosted/server.js"
+    "start": "HOSTNAME=:: node dist/app/dashboard-self-hosted/server.js"
   }
 }
