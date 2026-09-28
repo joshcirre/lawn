@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Plus, ArrowRight, Folder } from "lucide-react";
 import { CreateTeamDialog } from "@/components/teams/CreateTeamDialog";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { teamHomePath, teamSettingsPath, projectPath } from "@/lib/routes";
 import { useRoutePrewarmIntent } from "@/lib/useRoutePrewarmIntent";
@@ -36,23 +35,6 @@ type DashboardProjectCardProps = {
   };
   onOpen: () => void;
 };
-
-function formatTeamPlanLabel(plan: string, billingStatus?: string, stripeSubscriptionId?: string) {
-  if (!stripeSubscriptionId && billingStatus !== "active") {
-    return "Unpaid";
-  }
-
-  if (
-    billingStatus &&
-    billingStatus !== "active" &&
-    billingStatus !== "trialing" &&
-    billingStatus !== "past_due"
-  ) {
-    return "Unpaid";
-  }
-  if (plan === "pro" || plan === "team") return "Pro";
-  return "Basic";
-}
 
 function DashboardProjectCard({ teamSlug, project, onOpen }: DashboardProjectCardProps) {
   const convex = useConvex();
@@ -163,13 +145,6 @@ export default function DashboardPage() {
                 <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex items-center gap-3">
                     <h2 className="text-xl font-black text-[#1a1a1a]">{team.name}</h2>
-                    <Badge variant="secondary">
-                      {formatTeamPlanLabel(
-                        team.plan,
-                        team.billingStatus,
-                        team.stripeSubscriptionId,
-                      )}
-                    </Badge>
                   </div>
                   <div className="flex items-center gap-4">
                     <Link

@@ -6,15 +6,16 @@ export default defineSchema({
     name: v.string(),
     slug: v.string(),
     ownerClerkId: v.string(),
-    plan: v.union(v.literal("basic"), v.literal("pro"), v.literal("free"), v.literal("team")),
+    // Legacy billing fields from hosted lawn. Self-hosted deployments have no
+    // plans; these stay optional so existing rows still validate.
+    plan: v.optional(
+      v.union(v.literal("basic"), v.literal("pro"), v.literal("free"), v.literal("team")),
+    ),
     stripeCustomerId: v.optional(v.string()),
     stripeSubscriptionId: v.optional(v.string()),
     stripePriceId: v.optional(v.string()),
     billingStatus: v.optional(v.string()),
-  })
-    .index("by_slug", ["slug"])
-    .index("by_stripe_customer_id", ["stripeCustomerId"])
-    .index("by_stripe_subscription_id", ["stripeSubscriptionId"]),
+  }).index("by_slug", ["slug"]),
 
   teamMembers: defineTable({
     teamId: v.id("teams"),

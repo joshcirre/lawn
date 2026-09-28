@@ -3,7 +3,7 @@
 import { convexTest } from "convex-test";
 import { expect, test, vi } from "vitest";
 import { api, internal } from "./_generated/api";
-import { getTeamStorageUsedBytes } from "./billingHelpers";
+import { getTeamStorageUsedBytes } from "./storage";
 import { createVersionRecord, MAX_VIDEO_STACK_SIZE } from "./videos";
 import schema from "./schema";
 

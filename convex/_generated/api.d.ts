@@ -9,8 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as billing from "../billing.js";
-import type * as billingHelpers from "../billingHelpers.js";
 import type * as comments from "../comments.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
@@ -22,6 +20,7 @@ import type * as s3Multipart from "../s3Multipart.js";
 import type * as security from "../security.js";
 import type * as shareAccess from "../shareAccess.js";
 import type * as shareLinks from "../shareLinks.js";
+import type * as storage from "../storage.js";
 import type * as teams from "../teams.js";
 import type * as uploadLimits from "../uploadLimits.js";
 import type * as videoActions from "../videoActions.js";
@@ -37,8 +36,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  billing: typeof billing;
-  billingHelpers: typeof billingHelpers;
   comments: typeof comments;
   crons: typeof crons;
   http: typeof http;
@@ -50,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   security: typeof security;
   shareAccess: typeof shareAccess;
   shareLinks: typeof shareLinks;
+  storage: typeof storage;
   teams: typeof teams;
   uploadLimits: typeof uploadLimits;
   videoActions: typeof videoActions;
@@ -87,5 +85,4 @@ export declare const internal: FilterApi<
 export declare const components: {
   presence: import("@convex-dev/presence/_generated/component.js").ComponentApi<"presence">;
   rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
-  stripe: import("@convex-dev/stripe/_generated/component.js").ComponentApi<"stripe">;
 };

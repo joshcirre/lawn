@@ -3,7 +3,6 @@ import { internalMutation, mutation, query, MutationCtx, QueryCtx } from "./_gen
 import { internal } from "./_generated/api";
 import { Doc, Id } from "./_generated/dataModel";
 import { getUser, requireTeamAccess, requireProjectAccess } from "./auth";
-import { assertTeamHasActiveSubscription } from "./billingHelpers";
 import { deleteVideoAndDependentsBatch } from "./videos";
 
 // Maximum folder nesting. depth(root) == 0; a folder may be created/moved under
@@ -160,7 +159,6 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requireTeamAccess(ctx, args.teamId, "member");
-    await assertTeamHasActiveSubscription(ctx, args.teamId);
 
     if (args.parentId) {
       const parent = await ctx.db.get(args.parentId);

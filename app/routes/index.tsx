@@ -7,9 +7,8 @@ export const Route = createFileRoute("/")({
     const head = seoHead({
       title: "lawn — video review for creative teams",
       description:
-        "Video review and collaboration for creative teams. Frame-accurate comments, unlimited seats, $5/month flat. The open source Frame.io alternative.",
+        "Self-hosted video review for your team. Frame-accurate comments, version stacks and share links on Laravel Cloud.",
       path: "/",
-      ogImage: "/og/home.png",
     });
 
     return {

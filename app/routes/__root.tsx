@@ -14,7 +14,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Video review and collaboration for creative teams. Frame-accurate comments, unlimited seats, $5/month flat. The open source Frame.io alternative.",
+          "Self-hosted video review for your team. Frame-accurate comments, version stacks and share links.",
       },
       { property: "og:site_name", content: "lawn" },
       { name: "twitter:site", content: "@theo" },

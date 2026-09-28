@@ -80,16 +80,15 @@ API are in [`auth-api/README.md`](../auth-api/README.md).
 ### Convex deployment env
 
 Backend secrets live in the Convex deployment, not in Cloud. Set them once
-before the first `lawn-web` deploy (the push fails without the Stripe values and
-`AUTH_ISSUER_URL`):
+before the first `lawn-web` deploy (the push fails without `AUTH_ISSUER_URL`):
 
 ```bash
 export CONVEX_SELF_HOSTED_URL=https://convex.example.com CONVEX_SELF_HOSTED_ADMIN_KEY='lawn|...'
 bunx convex env set --from-file .env.convex.production
 ```
 
-Use the same keys as `.env.example` (`STRIPE_*`, `AUTH_ISSUER_URL`
-(`lawn-auth`'s public URL), `MUX_*`, `RAILWAY_*`, `AUTUMN_SECRET_KEY`,
-`CHUNKIFY_*`). `RAILWAY_*` is lawn's own S3 client for video uploads and can
-point at a second, public Cloud bucket. Stripe and Mux webhooks go to
+Use the same keys as `convex/.env.example` (`AUTH_ISSUER_URL`
+(`lawn-auth`'s public URL), `MUX_*`, `RAILWAY_*`, `CHUNKIFY_*`). There is no
+billing: every account can create teams and upload. `RAILWAY_*` is lawn's own S3 client for video uploads and can
+point at a second, public Cloud bucket. Mux webhooks go to
 `https://convex.example.com/http/...`.

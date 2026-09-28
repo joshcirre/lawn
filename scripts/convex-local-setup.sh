@@ -12,7 +12,7 @@
 #      CONVEX_DEPLOYMENT=dev:... value that .env.local was copied in with.
 #   2. Seeds the deployment's environment variables (a fresh local backend
 #      starts with NONE), which is required for `convex dev` to push functions:
-#        - Stripe / auth / Chunkify / Autumn secrets found in .env.local
+#        - auth / Chunkify / Mux / storage secrets found in .env.local
 #        - AUTH_ISSUER_URL, the Laravel auth API's URL (push-blocking)
 #
 # Secrets that live ONLY in the Convex cloud dashboard (not in .env.local) are
@@ -63,7 +63,7 @@ echo "convex-local-setup: seeding deployment environment variables..."
 seed="$(mktemp)"
 trap 'rm -f "$seed"' EXIT
 # Backend runtime secrets only; drop client (VITE_) and selection (CONVEX_) vars.
-grep -hE '^(STRIPE_|AUTH_ISSUER_URL|CHUNKIFY_|AUTUMN_|RAILWAY_|MUX_)' .env.local .env.convex.local 2>/dev/null \
+grep -hE '^(AUTH_ISSUER_URL|CHUNKIFY_|RAILWAY_|MUX_)' .env.local .env.convex.local 2>/dev/null \
   | grep -vE '^VITE_' > "$seed" || true
 if ! grep -qE '^AUTH_ISSUER_URL=.+' "$seed"; then
   echo "convex-local-setup: ERROR - missing AUTH_ISSUER_URL in .env.local (the Laravel auth API URL, e.g. http://localhost:8000)." >&2

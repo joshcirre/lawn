@@ -13,7 +13,6 @@ import { identityName, requireProjectAccess, requireVideoAccess } from "./auth";
 import { Doc, Id } from "./_generated/dataModel";
 import { generateUniqueToken } from "./security";
 import { resolveActiveShareGrant } from "./shareAccess";
-import { assertTeamCanStoreBytes, assertTeamHasActiveSubscription } from "./billingHelpers";
 import { assertVideoFileSizeAllowed } from "./uploadLimits";
 
 const workflowStatusValidator = v.union(
@@ -488,9 +487,8 @@ export const create = mutation({
     contentType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user, project } = await requireProjectAccess(ctx, args.projectId, "member");
+    const { user } = await requireProjectAccess(ctx, args.projectId, "member");
     assertVideoFileSizeAllowed(args.fileSize ?? 0);
-    await assertTeamCanStoreBytes(ctx, project.teamId, args.fileSize ?? 0);
     const publicId = await generatePublicId(ctx);
 
     const videoId = await ctx.db.insert("videos", {
@@ -520,18 +518,17 @@ export const createVersion = mutation({
     contentType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const {
-      user,
-      video: sourceVideo,
-      project,
-    } = await requireVideoAccess(ctx, args.sourceVideoId, "member");
+    const { user, video: sourceVideo } = await requireVideoAccess(
+      ctx,
+      args.sourceVideoId,
+      "member",
+    );
     const { versions, latest } = await getStackVersions(ctx, sourceVideo);
 
     // requireVideoAccess already verified team membership on the source video's
     // project; the new version inherits the same project, so no second access
     // check is needed.
     assertVideoFileSizeAllowed(args.fileSize ?? 0);
-    await assertTeamCanStoreBytes(ctx, project.teamId, args.fileSize ?? 0);
 
     return await insertVersionRecord(ctx, {
       latest,
@@ -1211,21 +1208,6 @@ export const assertVideoUploadAllowed = internalQuery({
     }
     assertVideoFileSizeAllowed(args.fileSize);
 
-    const currentBytes =
-      video.status !== "failed" &&
-      typeof video.fileSize === "number" &&
-      Number.isFinite(video.fileSize)
-        ? Math.max(0, video.fileSize)
-        : 0;
-    const requestedBytes = Number.isFinite(args.fileSize) ? Math.max(0, args.fileSize) : 0;
-    const incrementalBytes = Math.max(0, requestedBytes - currentBytes);
-
-    if (incrementalBytes > 0) {
-      await assertTeamCanStoreBytes(ctx, project.teamId, incrementalBytes);
-    } else {
-      await assertTeamHasActiveSubscription(ctx, project.teamId);
-    }
-
     return null;
   },
 });
@@ -1247,20 +1229,7 @@ export const reconcileUploadedObjectMetadata = internalMutation({
       throw new Error("Project not found");
     }
 
-    const declaredSize =
-      video.status !== "failed" &&
-      typeof video.fileSize === "number" &&
-      Number.isFinite(video.fileSize)
-        ? Math.max(0, video.fileSize)
-        : 0;
     const actualSize = Number.isFinite(args.fileSize) ? Math.max(0, args.fileSize) : 0;
-    const sizeDelta = actualSize - declaredSize;
-
-    if (sizeDelta > 0) {
-      await assertTeamCanStoreBytes(ctx, project.teamId, sizeDelta);
-    } else {
-      await assertTeamHasActiveSubscription(ctx, project.teamId);
-    }
 
     await ctx.db.patch(args.videoId, {
       fileSize: actualSize,

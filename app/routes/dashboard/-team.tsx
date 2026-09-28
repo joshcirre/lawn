@@ -34,7 +34,7 @@ export default function TeamPage() {
   const pathname = useLocation().pathname;
   const teamSlug = typeof params.teamSlug === "string" ? params.teamSlug : "";
 
-  const { context, team, projects, billing } = useTeamData({ teamSlug });
+  const { context, team, projects } = useTeamData({ teamSlug });
   const createProject = useMutation(api.projects.create);
   const deleteProject = useMutation(api.projects.remove);
   const { moveFromDrop } = useMoveActions();
@@ -87,8 +87,7 @@ export default function TeamPage() {
     }
   }, [shouldCanonicalize, context, navigate]);
 
-  const isLoadingData =
-    context === undefined || billing === undefined || projects === undefined || shouldCanonicalize;
+  const isLoadingData = context === undefined || projects === undefined || shouldCanonicalize;
 
   // Not found state
   if (context === null) {
@@ -134,10 +133,7 @@ export default function TeamPage() {
   };
 
   const canManageMembers = team?.role === "owner" || team?.role === "admin";
-  const hasActiveSubscription = billing?.hasActiveSubscription ?? false;
-  const canCreateProject = team?.role !== "viewer" && hasActiveSubscription;
-  const canAccessBilling = team?.role === "owner";
-  const billingPath = team ? teamSettingsPath(team.slug) : null;
+  const canCreateProject = team?.role !== "viewer";
 
   return (
     <div className="flex h-full flex-col">
@@ -170,28 +166,6 @@ export default function TeamPage() {
 
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
-        {!isLoadingData && !hasActiveSubscription && canAccessBilling && (
-          <Card className="mb-6 border-[#1a1a1a]">
-            <CardHeader>
-              <CardTitle>Set up billing to create projects</CardTitle>
-              <CardDescription>
-                This team has no active subscription. Go to Billing to start Basic or Pro before
-                creating projects.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="primary"
-                onClick={() => {
-                  if (!billingPath) return;
-                  navigate({ to: billingPath });
-                }}
-              >
-                Go to Billing
-              </Button>
-            </CardContent>
-          </Card>
-        )}
         {!isLoadingData && projects.length === 0 ? (
           <div className="animate-in fade-in flex h-full items-center justify-center duration-300">
             <Card className="max-w-sm text-center">
@@ -201,9 +175,7 @@ export default function TeamPage() {
                 </div>
                 <CardTitle className="text-lg">No projects yet</CardTitle>
                 <CardDescription>
-                  {hasActiveSubscription
-                    ? "Create your first project to start uploading videos."
-                    : "Activate billing first, then create your first project."}
+                  Create your first project to start uploading videos.
                 </CardDescription>
               </CardHeader>
               {canCreateProject && (
@@ -211,20 +183,6 @@ export default function TeamPage() {
                   <Button className="w-full" onClick={() => setCreateDialogOpen(true)}>
                     <Plus className="mr-1.5 h-4 w-4" />
                     Create project
-                  </Button>
-                </CardContent>
-              )}
-              {!canCreateProject && canAccessBilling && (
-                <CardContent>
-                  <Button
-                    variant="primary"
-                    className="w-full"
-                    onClick={() => {
-                      if (!billingPath) return;
-                      navigate({ to: billingPath });
-                    }}
-                  >
-                    Go to Billing
                   </Button>
                 </CardContent>
               )}

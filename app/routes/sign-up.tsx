@@ -7,10 +7,10 @@ import SignUpPage from "./auth/-sign-up";
 export const Route = createFileRoute("/sign-up")({
   head: () =>
     seoHead({
-      title: "Start your free trial",
-      description:
-        "Sign up for lawn — video review for creative teams. $5/month flat, unlimited seats.",
+      title: "Create account",
+      description: "Create your lawn account.",
       path: "/sign-up",
+      noIndex: true,
     }),
   validateSearch: (search: Record<string, unknown>) => ({
     redirect_url: typeof search.redirect_url === "string" ? search.redirect_url : undefined,

@@ -77,7 +77,7 @@ Each of these cost a failed deploy. Symptom → cause → fix.
     redeploys, so don't also trigger manual deploys while iterating.
 
 11. **Function push needs env first.** `convex deploy` evaluates modules at
-    push time, so any module that reads env at import (e.g. the Stripe
+    push time, so any module that reads env at import (e.g. a Stripe
     component's API key) fails the push until `convex env set` has run.
 
 ## Auth without Clerk (optional)

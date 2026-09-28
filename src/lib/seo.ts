@@ -1,4 +1,5 @@
-const SITE_URL = "https://lawn.video";
+// Public URL of this deployment, for canonical links and absolute OG images.
+const SITE_URL = (import.meta.env.VITE_SITE_URL ?? "").replace(/\/$/, "");
 const SITE_NAME = "lawn";
 const DEFAULT_OG_IMAGE = "/og/default.png";
 const TWITTER_HANDLE = "@theo";

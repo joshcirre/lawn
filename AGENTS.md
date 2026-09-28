@@ -53,7 +53,7 @@ values to `.env.convex.local` (git-ignored, auto-seeded):
 - `MUX_*` — Mux encoding / playback
 
 They are read at runtime, so the function push still succeeds without them.
-External webhooks (Stripe, Chunkify, Mux) can't reach a `127.0.0.1` backend
+External webhooks (Chunkify, Mux) can't reach a `127.0.0.1` backend
 without a tunnel, so use `dev:cloud` (or a tunnel) when testing webhook flows.
 
 <!-- convex-ai-start -->

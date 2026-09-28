@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import {
   getUser,
   identityAvatarUrl,
@@ -8,7 +8,6 @@ import {
   requireUser,
   requireTeamAccess,
 } from "./auth";
-import { getTeamSubscriptionState } from "./billingHelpers";
 import { deleteVideoAndDependents } from "./videos";
 
 function normalizedEmail(value: string) {
@@ -59,8 +58,6 @@ export const create = mutation({
       name: args.name,
       slug,
       ownerClerkId: user.subject,
-      plan: "basic",
-      billingStatus: "not_subscribed",
     });
 
     await ctx.db.insert("teamMembers", {
@@ -419,12 +416,6 @@ export const deleteTeam = mutation({
   args: { teamId: v.id("teams") },
   handler: async (ctx, args) => {
     await requireTeamAccess(ctx, args.teamId, "owner");
-    const subscriptionState = await getTeamSubscriptionState(ctx, args.teamId);
-    if (subscriptionState.hasActiveSubscription) {
-      throw new Error(
-        "Cannot delete a team with an active subscription. Cancel billing first in team settings.",
-      );
-    }
 
     // Delete all team members
     const members = await ctx.db
@@ -465,19 +456,5 @@ export const deleteTeam = mutation({
     }
 
     await ctx.db.delete(args.teamId);
-  },
-});
-
-export const linkStripeCustomer = internalMutation({
-  args: {
-    teamId: v.id("teams"),
-    stripeCustomerId: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.teamId, {
-      stripeCustomerId: args.stripeCustomerId,
-    });
-    return null;
   },
 });
