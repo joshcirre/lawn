@@ -24,7 +24,7 @@ Four Cloud applications deploy from this repository:
 | Application      | Root directory      | Purpose                                                                                                       |
 | ---------------- | ------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `lawn-frontend`  | `/`                 | Builds and serves the TanStack Start frontend as a single-page app; pushes Convex functions during its build. |
-| `lawn`           | `convex-backend/`   | Runs the self-hosted Convex backend and HTTP actions, backed by Cloud Postgres and a private Cloud bucket.    |
+| `lawn`           | `convex-backend/`   | Runs the self-hosted Convex backend and HTTP actions, backed by Cloud MySQL and a private Cloud bucket.       |
 | `lawn-api`       | `auth-api/`         | Laravel API for passkeys, email and password sign-in, and JWT issuance.                                       |
 | `lawn-dashboard` | `convex-dashboard/` | Serves the self-hosted Convex admin dashboard and connects to the existing backend.                           |
 
@@ -35,6 +35,19 @@ webhook secret are set in the **production Convex deployment** as `MUX_*`
 environment variables. Current playback IDs are public; the configured signing
 key is not yet used to restrict playback. Keep credentials in ignored local
 files or the deployment's secret store; do not commit them.
+
+Production endpoints: [Lawn](https://lawn-frontend-production-a0y7al.laravel.cloud),
+[Convex dashboard](https://lawn-dashboard-production-sijoow.laravel.cloud),
+[Convex backend](https://lawn-production-pkhb7d.laravel.cloud), and
+[auth API](https://lawn-api-production-7njahc.laravel.cloud). The dashboard
+prompts for the existing Convex admin key; its app environment contains only
+the backend URL. The backend uses the `lawn` database in the attached Cloud
+MySQL cluster. Cloud's private MySQL endpoint has a certificate Convex cannot
+verify, so this connection runs without TLS within Cloud's private network.
+
+The backend's one-minute Mux reconciliation cron makes public HTTP requests
+that reset Cloud's idle timer. Hibernation is enabled for the backend, but it
+does not currently scale to zero while that cron runs.
 
 For the exact Cloud resources, environment variables, and deployment order,
 see [Deployment](docs/deployment.md). For local development, see
@@ -52,4 +65,5 @@ and its data on its own Laravel Cloud resources.
 - [Deployment](docs/deployment.md)
 - [Auth API](auth-api/README.md)
 - [Self-hosted Convex backend](convex-backend/README.md)
+- [Self-hosted Convex dashboard](convex-dashboard/README.md)
 - [Philosophy](docs/philosophy.md)

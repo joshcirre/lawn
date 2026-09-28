@@ -39,24 +39,34 @@ functions to `lawn`, whose auth config points at `lawn-api`.
 from the same origin under `/http`. The container must stay stateless because
 Cloud's disk is ephemeral:
 
-- **Database:** attach Cloud Postgres (17) and name the database after
+- **Database:** attach Cloud MySQL and name the database after
   `INSTANCE_NAME` with `-` replaced by `_` (`lawn` -> `lawn`). `start.sh` strips the
   database name from `DATABASE_URL` and refuses to boot on a mismatch.
+  Use a `mysql://` URL, or Cloud's `DB_*` variables with `DB_CONNECTION=mysql`.
+  Remove stale `POSTGRES_URL` and `MYSQL_URL` overrides when using the attached
+  database variables; they take precedence. Startup logs should show `db=mysql-v5`.
 - **Storage:** attach a private bucket as the default disk. All five Convex
   storage buckets share it unless `S3_STORAGE_*_BUCKET` overrides are set.
-- **Instances:** exactly one replica, always on (not Flex scale-to-zero).
+- **Instances:** exactly one replica, 2 GB RAM or more.
   Self-hosted Convex is single-node, holds WebSocket subscriptions in memory, and
-  runs `convex/crons.ts`. 2 GB RAM or more. In this app, the one-minute Mux
+  runs `convex/crons.ts`. In this app, the one-minute Mux
   reconciliation cron invokes a Node action that makes three HTTP mutation
   requests through the public Convex origin on each run. Those inbound requests
   reset Laravel Cloud's scale-to-zero idle timer, so enabling hibernation does
-  not currently make this app sleep. If the backend does sleep, its in-process
-  Convex cron jobs cannot run until it wakes.
+  not currently make this app sleep. This production environment has hibernation
+  enabled, but the cron still keeps it active. If the backend does sleep, its
+  in-process Convex cron jobs cannot run until it wakes.
+- **MySQL TLS:** Cloud's private MySQL endpoint presents a self-generated
+  ProxySQL certificate without a hostname entry. Convex rejects it with
+  `UnknownIssuer`, including when given the container's CA bundle. Set
+  `DO_NOT_REQUIRE_SSL=1` for this private connection. Database traffic is then
+  unencrypted within Cloud's private network.
 
 Environment variables:
 
 - `INSTANCE_NAME`, `INSTANCE_SECRET` (`openssl rand -hex 32`, never let it default)
 - `CONVEX_CLOUD_ORIGIN`: this app's public URL, e.g. `https://convex.example.com`
+- `DB_CONNECTION=mysql`, `DO_NOT_REQUIRE_SSL=1` for the attached Cloud MySQL
 - `DISABLE_BEACON=1`, `REDACT_LOGS_TO_CLIENT=1` (optional)
 
 Generate the admin key from the same name and secret (any platform's release
@@ -67,6 +77,9 @@ convex-local-backend keygen admin-key --instance-name "$INSTANCE_NAME" --instanc
 ```
 
 ### `lawn-dashboard`: Convex admin UI
+
+See the [dashboard deployment guide](../convex-dashboard/README.md) for complete
+Cloud settings, version pins, and verification steps.
 
 The self-hosted dashboard is a **separate service**; `lawn` does not serve it.
 The `convex-dashboard/` app downloads the application layers from the official
@@ -110,11 +123,12 @@ API are in [`auth-api/README.md`](../auth-api/README.md).
 
 ### Convex deployment env
 
-Backend secrets live in the Convex deployment, not in Cloud. Set them once
-before the first `lawn-web` deploy (the push fails without `AUTH_ISSUER_URL`):
+Backend secrets live in the Convex deployment, not in Cloud. Set them before
+the first `lawn-frontend` deploy (the push fails without `AUTH_ISSUER_URL`),
+and set them again after moving to a fresh database:
 
 ```bash
-export CONVEX_SELF_HOSTED_URL=https://convex.example.com CONVEX_SELF_HOSTED_ADMIN_KEY='lawn|...'
+export CONVEX_SELF_HOSTED_URL=https://lawn-production-pkhb7d.laravel.cloud CONVEX_SELF_HOSTED_ADMIN_KEY='lawn|...'
 bunx convex env set --from-file .env.convex.production
 ```
 
@@ -126,13 +140,13 @@ billing: every account can create teams and upload.
 private Cloud bucket** from the one attached to `lawn` for Convex's own
 storage. Lawn gives browsers signed upload URLs and Mux a 24-hour signed object
 URL for ingest, so the bucket does not need public read access. Set
-`RAILWAY_ENDPOINT`, `RAILWAY_ACCESS_KEY_ID`, `RAILWAY_SECRET_ACCESS_KEY`, and
-`RAILWAY_BUCKET_NAME` in Convex. Configure bucket CORS for the web app's origin
+`RAILWAY_ENDPOINT`, `RAILWAY_ACCESS_KEY_ID`, `RAILWAY_SECRET_ACCESS_KEY`,
+`RAILWAY_REGION`, and `RAILWAY_BUCKET_NAME` in Convex. Configure bucket CORS for the web app's origin
 so browsers can upload directly.
 
 In the Mux **Production** environment, create a Video access token with Read
 and Write permission, a signing key, and a webhook to
-`https://convex.example.com/http/webhooks/mux`. Set `MUX_TOKEN_ID`,
+`https://lawn-production-pkhb7d.laravel.cloud/http/webhooks/mux`. Set `MUX_TOKEN_ID`,
 `MUX_TOKEN_SECRET`, `MUX_SIGNING_KEY` (key ID), `MUX_PRIVATE_KEY` (base64 private
 key), and `MUX_WEBHOOK_SECRET` in the production Convex deployment. Keep these
 values out of version control. The current playback path creates public Mux

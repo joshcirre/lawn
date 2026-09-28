@@ -2,6 +2,8 @@ import { HeadContent, Outlet, Scripts, createRootRoute } from "@tanstack/react-r
 import type { ReactNode } from "react";
 
 import { NotFound } from "@/components/ui/NotFound";
+import "@fontsource-variable/geist";
+import "@fontsource-variable/geist-mono";
 import appCss from "../app.css?url";
 import geistMonoLatin from "@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url";
 

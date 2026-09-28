@@ -13,7 +13,7 @@ const STACK = [
   {
     name: "Laravel Cloud",
     role: "Hosting",
-    body: "All three apps run on Laravel Cloud from one repo: the web app, the Convex backend and the auth API, with Postgres and object storage attached.",
+    body: "Four apps run on Laravel Cloud from one repo: the web app, Convex backend, auth API, and Convex dashboard. Data lives in Cloud MySQL and private object storage.",
   },
   {
     name: "Convex",
