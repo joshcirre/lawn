@@ -1,0 +1,12 @@
+{
+  "name": "lawn-convex-backend",
+  "private": true,
+  "description": "Self-hosted Convex backend for lawn, deployed as its own Laravel Cloud app.",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "bash build.sh",
+    "start": "bash start.sh"
+  }
+}
