@@ -1,24 +1,6 @@
 # Deployment
 
-## Deploying to Vercel (with Convex)
-
-This repo is configured so Vercel runs:
-
-```bash
-bun run build:vercel
-```
-
-`build:vercel` runs Convex deployment first, then runs the app build via Convex:
-
-```bash
-bunx convex deploy --cmd 'bun run build' --cmd-url-env-var-name VITE_CONVEX_URL
-```
-
-Required Vercel environment variable:
-
-- `CONVEX_DEPLOY_KEY` (create a production deploy key in Convex and add it in Vercel project settings)
-
-## Deploying to Laravel Cloud (with self-hosted Convex)
+## Laravel Cloud deployment
 
 Four Cloud applications from this one repository (Cloud's monorepo support):
 
@@ -65,7 +47,8 @@ Cloud's disk is ephemeral:
 Environment variables:
 
 - `INSTANCE_NAME`, `INSTANCE_SECRET` (`openssl rand -hex 32`, never let it default)
-- `CONVEX_CLOUD_ORIGIN`: this app's public URL, e.g. `https://convex.example.com`
+- `CONVEX_CLOUD_ORIGIN`: this app's public URL,
+  `https://lawn-production-pkhb7d.laravel.cloud` in production
 - `DB_CONNECTION=mysql`, `DO_NOT_REQUIRE_SSL=1` for the attached Cloud MySQL
 - `DISABLE_BEACON=1`, `REDACT_LOGS_TO_CLIENT=1` (optional)
 
@@ -106,14 +89,15 @@ git-ignored `.env.cloud.local` file. Both dashboard options read and write the
 
 ### `lawn-frontend`: the SPA
 
-`build:cloud` is `build:vercel` with `-y`; the Convex CLI switches to self-hosted
-mode when these are set, and injects `VITE_CONVEX_URL` from the backend:
+`build:cloud` pushes functions to the self-hosted Convex backend, then builds
+the web app with `VITE_CONVEX_URL` set to that backend's URL. Set these Cloud
+environment variables on `lawn-frontend`:
 
-- `CONVEX_SELF_HOSTED_URL`: `lawn`'s public URL (do not also set `CONVEX_DEPLOY_KEY`)
+- `CONVEX_SELF_HOSTED_URL`: `lawn`'s public URL
 - `CONVEX_SELF_HOSTED_ADMIN_KEY`
 - `VITE_AUTH_URL`: `lawn-api`'s public URL
 
-`start:cloud` serves `dist/client` with the same fallback routing as `vercel.json`.
+`start:cloud` serves `dist/client`, returning the app shell for client-side routes.
 
 ### `lawn-api`: sign-in (passkeys + passwords)
 
