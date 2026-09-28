@@ -75,6 +75,11 @@ elif [ -n "${DATABASE_URL:-}" ]; then
     mysql) db_flags=(--db mysql-v5) ;;
     *) fail "unsupported DATABASE_URL scheme '$scheme'" ;;
   esac
+  # Cloud Postgres hostnames (ep-x.c-N.aws-REGION.pg.laravel.cloud) are CNAMEs
+  # to Neon, and Convex's TLS client ends up with Neon's certificate, which only
+  # covers *.c-N.REGION.aws.neon.tech. Connect via the Neon name for the same
+  # endpoint so verification passes.
+  server="$(printf '%s' "$server" | sed -E 's#@([^.@/]+\.c-[0-9]+)\.aws-([a-z0-9-]+)\.pg\.laravel\.cloud#@\1.\2.aws.neon.tech#')"
   db_spec="$server"
 else
   echo "start: WARNING no database attached; using SQLite on the ephemeral disk (data is lost on every deploy)." >&2
@@ -111,7 +116,7 @@ case "$node_version" in
   *) echo "start: WARNING \"use node\" actions need node v20/v22/v24 on PATH (found '${node_version:-none}')." >&2 ;;
 esac
 
-echo "start: origin=$origin site=$site port=$port db=${db_flags[1]:-sqlite} storage=${storage_flags[0]}"
+echo "start: origin=$origin site=$site port=$port db=${db_flags[1]:-sqlite} db_host=${server:+${server##*@}} storage=${storage_flags[0]}"
 
 exec bin/convex-local-backend \
   --instance-name "$INSTANCE_NAME" \
