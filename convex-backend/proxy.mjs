@@ -18,12 +18,18 @@ const HEAD_END = "\r\n\r\n";
 
 function fixUpgradeHead(head) {
   const lines = head.split("\r\n");
-  const isUpgrade = lines.some((l) => /^upgrade:\s*websocket\s*$/i.test(l));
+  // nginx drops the hop-by-hop Upgrade/Connection headers, but the
+  // end-to-end Sec-WebSocket-Key survives and marks a WebSocket handshake.
+  const isUpgrade = lines.some((l) => /^(upgrade:\s*websocket|sec-websocket-key:)/i.test(l));
   if (!isUpgrade) return head;
-  const i = lines.findIndex((l) => /^connection:/i.test(l));
-  if (i === -1) lines.splice(1, 0, "Connection: Upgrade");
-  else if (!/upgrade/i.test(lines[i])) lines[i] = "Connection: Upgrade";
-  return lines.join("\r\n");
+  const before = lines
+    .slice(1)
+    .filter((l) => /^(connection|upgrade):/i.test(l))
+    .join(" | ");
+  const kept = lines.filter((l, i) => i === 0 || !/^(connection|upgrade):/i.test(l));
+  kept.splice(1, 0, "Upgrade: websocket", "Connection: Upgrade");
+  console.log(`proxy: websocket handshake ${lines[0].split(" ")[1]} (had: ${before || "none"})`);
+  return kept.join("\r\n");
 }
 
 const server = net.createServer((client) => {
