@@ -3,20 +3,59 @@
 // Laravel Cloud health-checks and routes over IPv6, but convex-local-backend's
 // --interface only accepts an IPv4 address. Forwarding raw TCP keeps HTTP,
 // keep-alive and WebSocket sync connections untouched.
+//
+// One HTTP-aware tweak: Cloud's in-container nginx forwards `Upgrade:
+// websocket` but rewrites `Connection`, so Convex rejects the sync socket
+// ("Connection header did not include upgrade"). Restore it on the request
+// head; once Convex answers 101, nginx tunnels the connection.
 import net from "node:net";
 
 const listenPort = Number(process.env.LISTEN_PORT);
 const targetPort = Number(process.env.TARGET_PORT);
 const targetHost = process.env.TARGET_HOST ?? "127.0.0.1";
 
+const HEAD_END = "\r\n\r\n";
+
+function fixUpgradeHead(head) {
+  const lines = head.split("\r\n");
+  const isUpgrade = lines.some((l) => /^upgrade:\s*websocket\s*$/i.test(l));
+  if (!isUpgrade) return head;
+  const i = lines.findIndex((l) => /^connection:/i.test(l));
+  if (i === -1) lines.splice(1, 0, "Connection: Upgrade");
+  else if (!/upgrade/i.test(lines[i])) lines[i] = "Connection: Upgrade";
+  return lines.join("\r\n");
+}
+
 const server = net.createServer((client) => {
   const upstream = net.connect(targetPort, targetHost);
   client.setNoDelay(true);
   upstream.setNoDelay(true);
-  client.pipe(upstream).pipe(client);
   // Backend not up yet or restarting: drop the client instead of hanging.
   client.on("error", () => upstream.destroy());
   upstream.on("error", () => client.destroy());
+  upstream.pipe(client);
+
+  // Buffer only the first request head, then switch to raw piping.
+  let head = Buffer.alloc(0);
+  let piping = false;
+  const onData = (chunk) => {
+    head = Buffer.concat([head, chunk]);
+    const end = head.indexOf(HEAD_END);
+    if (end === -1 && head.length < 64 * 1024) return;
+    client.off("data", onData);
+    if (end !== -1) {
+      const fixed = fixUpgradeHead(head.subarray(0, end).toString("latin1"));
+      head = Buffer.concat([Buffer.from(fixed, "latin1"), head.subarray(end)]);
+    }
+    upstream.write(head);
+    piping = true;
+    client.pipe(upstream);
+  };
+  client.on("data", onData);
+  // Client closed mid-head: flush what arrived and close upstream.
+  client.on("end", () => {
+    if (!piping) upstream.end(head);
+  });
 });
 
 // ipv6Only: false makes "::" accept IPv4-mapped connections too.
